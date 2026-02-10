@@ -1,5 +1,5 @@
 /**
- * Handler Analyzer - Sprint 2
+ * Handler Analyzer
  * Detects and analyzes AO Handlers.add() patterns
  */
 

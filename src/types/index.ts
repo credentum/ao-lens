@@ -1,6 +1,6 @@
 /**
  * ao-lens type definitions
- * Schema version: 1.5 (Sprint 6: CI Integration)
+ * Schema version: 1.5
  */
 
 export const SCHEMA_VERSION = "1.5";
@@ -11,7 +11,7 @@ export interface BaseOutput {
   timestamp: string;
 }
 
-// Sprint 1: AST Foundation types
+// AST Foundation types
 export interface FunctionDefinition {
   name: string;
   line: number;
@@ -53,7 +53,7 @@ export interface ParseResult extends BaseOutput {
   };
 }
 
-// Sprint 2: Handler types
+// Handler types
 export interface HandlerTrigger {
   action_tag: string | null;
   required_tags: Record<string, string>;
@@ -87,7 +87,7 @@ export interface HandlerInfo {
   safe_options?: SafeLibraryOptions;
 }
 
-// Sprint 3: State tracking types
+// State tracking types
 export interface StateAccessEntry {
   field: string;
   type: "read" | "write";
@@ -125,7 +125,7 @@ export interface CLIOutput {
   data: ParseResult;
 }
 
-// Sprint 4: IPC Topology types
+// IPC Topology types
 export interface ProcessInfo {
   name: string;
   file: string;
@@ -163,7 +163,7 @@ export interface IPCGraphResult extends BaseOutput {
   mermaid?: string;
 }
 
-// Sprint 7: Agent-Driven Semantic Exploration types
+// Agent-Driven Semantic Exploration types
 
 /** Output for get_function_details tool */
 export interface FunctionDetails {

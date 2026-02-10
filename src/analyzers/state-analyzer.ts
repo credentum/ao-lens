@@ -1,5 +1,5 @@
 /**
- * State Analyzer - Sprint 3
+ * State Analyzer
  * Tracks state access, side effects, and replay safety
  */
 

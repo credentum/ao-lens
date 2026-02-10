@@ -1,5 +1,5 @@
 /**
- * IPC Analyzer - Sprint 4
+ * IPC Analyzer
  * Cross-file analysis and message flow graph generation
  */
 

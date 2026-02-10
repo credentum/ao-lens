@@ -209,7 +209,7 @@ function prettyPrint(result: ParseResult): void {
     }
   }
 
-  // Sprint 3: State analysis display
+  // State analysis display
   if (result.state_analysis.state_mutations.length > 0) {
     console.log(`\nSTATE MUTATIONS (${result.state_analysis.state_mutations.length}):`);
     for (const mutation of result.state_analysis.state_mutations) {

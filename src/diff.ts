@@ -6,7 +6,7 @@
  * - Issues resolved (improvements)
  * - Moved issues (same code, different line)
  *
- * Used by the orchestrator to detect when fix attempts make code worse.
+ * Used to detect when fix attempts make code worse.
  */
 
 import { SecurityFinding, SecurityReport } from "./analyzers/security";

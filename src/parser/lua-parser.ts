@@ -1,6 +1,6 @@
 /**
  * Lua Parser using tree-sitter
- * Sprint 1: AST Foundation + Sprint 2: Handler Mapper + Sprint 3: State Tracking
+ * AST Foundation + Handler Mapper + State Tracking
  */
 
 import Parser from "tree-sitter";
@@ -52,7 +52,7 @@ export class LuaParser {
       const globals = this.extractGlobals(rootNode, sourceCode);
       const handlers = this.handlerAnalyzer.findHandlers(rootNode);
 
-      // Sprint 3: Analyze state access and side effects
+      // Analyze state access and side effects
       const fileAnalysis = this.stateAnalyzer.analyzeFile(rootNode);
 
       const parseTimeMs = Date.now() - startTime;

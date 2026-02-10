@@ -127,7 +127,7 @@ const TOOLS: Tool[] = [
       required: ["path"],
     },
   },
-  // Sprint 7: Agent-Driven Semantic Exploration Tools
+  // Agent-Driven Semantic Exploration Tools
   {
     name: "get_function_details",
     description: "Get comprehensive details about a specific function by name, including parameters, line range, and body analysis",
@@ -290,7 +290,7 @@ class AoLensMcpServer {
           case "security_audit":
             return this.securityAudit(args as { path: string });
 
-          // Sprint 7: Agent-Driven Semantic Exploration
+          // Agent-Driven Semantic Exploration
           case "get_function_details":
             return this.getFunctionDetails(args as { file_path: string; function_name: string });
 
@@ -649,7 +649,7 @@ class AoLensMcpServer {
     };
   }
 
-  // Sprint 7: Agent-Driven Semantic Exploration Tools
+  // Agent-Driven Semantic Exploration Tools
 
   private getFunctionDetails(args: { file_path: string; function_name: string }) {
     if (!fs.existsSync(args.file_path)) {
