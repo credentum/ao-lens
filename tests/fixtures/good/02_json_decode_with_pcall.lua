@@ -1,5 +1,5 @@
 -- GOOD: json.decode wrapped in pcall
--- Expected: NO findings
+-- NotExpected: JSON_DECODE_NO_PCALL
 
 State = State or { Owner = "owner-address", Params = {} }
 

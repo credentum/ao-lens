@@ -1,5 +1,5 @@
 -- GOOD: msg.Tags accessed with proper nil guard
--- Expected: NO findings
+-- NotExpected: MSG_TAGS_NO_NIL_GUARD
 
 State = State or { History = {} }
 

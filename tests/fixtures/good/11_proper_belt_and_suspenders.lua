@@ -1,5 +1,5 @@
 -- GOOD: Handler has auth in BOTH matcher AND body (belt-and-suspenders)
--- Expected: NO findings
+-- NotExpected: MISSING_BELT_AND_SUSPENDERS
 
 State = State or { Owner = "owner-address", Data = {} }
 

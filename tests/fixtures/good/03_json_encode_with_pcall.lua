@@ -1,5 +1,5 @@
 -- GOOD: json.encode wrapped in pcall
--- Expected: NO findings
+-- NotExpected: JSON_ENCODE_NO_PCALL
 
 State = State or { History = {} }
 

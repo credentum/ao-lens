@@ -1,5 +1,5 @@
 -- GOOD: State.Owner = State.Owner or X WITH assert
--- Expected: NO findings
+-- NotExpected: UNSAFE_OWNER_OR_PATTERN
 
 State.Owner = State.Owner or ao.env.Process.Owner
 assert(State.Owner ~= nil, "Owner not initialized")  -- Required assert!

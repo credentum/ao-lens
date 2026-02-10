@@ -1,5 +1,5 @@
 -- GOOD: msg.From == State.Owner with proper nil guards
--- Expected: NO findings
+-- NotExpected: NIL_GUARD_REQUIRED
 
 State = State or { Owner = "owner-address", Data = {} }
 

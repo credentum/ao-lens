@@ -1,5 +1,5 @@
 -- GOOD: Uses assertion-based auth (fails closed)
--- Expected: NO AUTH_CONDITIONAL_NOT_ASSERT finding
+-- NotExpected: NO_AUTH_CHECK
 
 State = State or { Owner = "owner-address", Data = {} }
 

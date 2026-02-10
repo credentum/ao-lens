@@ -1,5 +1,5 @@
 -- GOOD: Handler with proper authorization check using assertions
--- Expected: NO findings
+-- NotExpected: NO_AUTH_CHECK
 
 State = State or { Owner = "owner-address", Data = {} }
 

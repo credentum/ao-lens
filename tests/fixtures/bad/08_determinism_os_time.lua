@@ -1,5 +1,5 @@
 -- BAD: Using os.time() which is non-deterministic
--- Expected: DETERMINISM_OS_TIME (high) at line 8
+-- Expected: OS_TIME_USAGE (high) at line 8
 
 State = State or { History = {} }
 

@@ -1,4 +1,5 @@
--- Mutating handler properly sends confirmation
+-- GOOD: Mutating handler properly sends confirmation
+-- NotExpected: MUTATING_HANDLER_NO_RESPONSE
 local json = require("json")
 
 State = State or {

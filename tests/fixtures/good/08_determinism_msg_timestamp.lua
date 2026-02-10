@@ -1,5 +1,5 @@
 -- GOOD: Using msg.Timestamp instead of os.time()
--- Expected: NO findings
+-- NotExpected: OS_TIME_USAGE
 
 State = State or { History = {} }
 

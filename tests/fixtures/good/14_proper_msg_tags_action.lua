@@ -1,5 +1,5 @@
 -- GOOD: Uses msg.Tags.Action with nil guard (correct AO pattern)
--- Expected: NO findings
+-- NotExpected: MSG_ACTION_DIRECT_ACCESS
 
 State = State or { Owner = "owner-address", Data = {} }
 

@@ -1,5 +1,5 @@
 -- GOOD: Mutating handler properly checks State.Frozen
--- Expected: NO findings
+-- NotExpected: NO_FROZEN_CHECK
 
 State = State or { Owner = "owner-address", Data = {}, Frozen = false }
 

@@ -1,4 +1,5 @@
--- Frozen is properly initialized before use
+-- GOOD: Frozen is properly initialized before use
+-- NotExpected: STATE_FROZEN_NOT_INITIALIZED
 local json = require("json")
 
 State = State or {

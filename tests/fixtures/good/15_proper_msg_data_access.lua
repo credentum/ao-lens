@@ -1,5 +1,5 @@
 -- GOOD: Uses msg.Tags.X or json.decode(msg.Data) for parameters
--- Expected: NO findings
+-- NotExpected: MSG_UNKNOWN_PROPERTY
 
 local json = require("json")
 State = State or { Owner = "owner-address", Params = {} }

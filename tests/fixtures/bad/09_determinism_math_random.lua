@@ -1,5 +1,5 @@
 -- BAD: Using math.random() which is non-deterministic
--- Expected: DETERMINISM_MATH_RANDOM (high) at line 7
+-- Expected: MATH_RANDOM_UNSEEDED (high) at line 7
 
 State = State or { Value = 0 }
 

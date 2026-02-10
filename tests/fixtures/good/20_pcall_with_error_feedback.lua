@@ -1,4 +1,5 @@
--- pcall failure properly notifies the user
+-- GOOD: pcall failure properly notifies the user
+-- NotExpected: SILENT_PCALL_FAILURE
 local json = require("json")
 
 State = State or {

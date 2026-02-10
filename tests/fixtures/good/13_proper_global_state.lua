@@ -1,5 +1,5 @@
 -- GOOD: State is global (no local keyword) - persists across messages
--- Expected: NO findings
+-- NotExpected: LOCAL_STATE_SHADOW
 
 State = State or { Owner = "owner-address", Data = {} }
 

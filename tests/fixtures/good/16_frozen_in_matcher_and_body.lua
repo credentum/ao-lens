@@ -1,5 +1,5 @@
 -- GOOD: Frozen check in BOTH matcher AND body (belt-and-suspenders)
--- Expected: NO findings
+-- NotExpected: FROZEN_CHECK_NOT_IN_MATCHER
 
 State = State or { Owner = "owner-address", Data = {}, Frozen = false }
 

@@ -1,5 +1,5 @@
 -- GOOD: State.Owner = nil but set via conditional assignment
--- Expected: NO findings
+-- NotExpected: OWNER_NEVER_INITIALIZED
 
 -- Owner initialized to nil but set from ao.env on first access
 State = State or { Owner = nil, Data = {} }

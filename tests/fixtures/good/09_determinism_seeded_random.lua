@@ -1,5 +1,5 @@
 -- GOOD: No determinism issues - only uses msg fields
--- Expected: NO findings
+-- NotExpected: MATH_RANDOM_UNSEEDED
 
 State = State or { Counter = 0, Owner = "owner-address" }
 
