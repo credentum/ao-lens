@@ -1,0 +1,55 @@
+skill_id: skill_ao_replay_safe_init
+title: "AO Replay-Safe Initialization"
+domain: lua/ao
+priority: critical
+tech_stack: [lua, ao]
+
+# AO processes reconstruct state by replaying messages from the log.
+# The top-level code runs on EVERY replay. If you overwrite State
+# unconditionally, you lose all accumulated state on restart.
+
+anti_patterns:
+  - id: STATE_OVERWRITE_ON_REPLAY
+    description: "State = {...} without 'or' guard resets all state on every replay"
+    severity: critical
+    detection:
+      type: regex
+      pattern: "^State\\s*=\\s*\\{"
+    bad_code: |
+      -- FATAL: This runs on every replay and wipes accumulated state!
+      State = {
+        Owner = ao.env.Process.Owner,
+        Counter = 0
+      }
+    good_code: |
+      -- Only initializes if State doesn't exist yet (first run)
+      State = State or {
+        Owner = ao.env.Process.Owner,
+        Counter = 0
+      }
+
+  - id: OWNER_FROM_ENV_NO_GUARD
+    description: "Setting Owner from ao.env on every replay overwrites any ownership transfer"
+    severity: high
+    detection:
+      type: regex
+      pattern: "State\\.Owner\\s*=\\s*ao\\.env"
+    bad_code: |
+      -- Runs on every replay, undoing any ownership transfer
+      State.Owner = ao.env.Process.Owner
+    good_code: |
+      -- Set once, preserved across replays
+      State = State or {
+        Owner = ao.env.Process.Owner
+      }
+
+  - id: GLOBAL_WITHOUT_OR
+    description: "Global variable assignment without replay guard"
+    severity: medium
+    detection:
+      type: regex
+      pattern: "^(?:Balances|Tokens|Users|Config|Settings|Registry)\\s*=\\s*\\{"
+    bad_code: |
+      Balances = {}  -- Resets all balances on replay!
+    good_code: |
+      Balances = Balances or {}  -- Preserved across replays

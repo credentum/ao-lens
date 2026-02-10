@@ -1,0 +1,54 @@
+skill_id: skill_ao_handler_patterns
+title: "AO Handler Patterns"
+domain: lua/ao
+priority: high
+tech_stack: [lua, ao]
+
+# Common pitfalls with AO handler registration, matching, and responses.
+
+anti_patterns:
+  - id: HASMATCHING_TAG_NO_BODY_AUTH
+    description: "hasMatchingTag matcher without authorization check in handler body"
+    severity: high
+    detection:
+      type: regex
+      pattern: "hasMatchingTag\\s*\\(\\s*[\"']Action[\"']"
+    bad_code: |
+      -- hasMatchingTag only checks tag presence, not WHO sent it
+      Handlers.add("Update",
+        Handlers.utils.hasMatchingTag("Action", "Update"),
+        function(msg)
+          State.Value = msg.Data  -- Anyone can call this!
+        end)
+    good_code: |
+      Handlers.add("Update",
+        Handlers.utils.hasMatchingTag("Action", "Update"),
+        function(msg)
+          assert(msg.From == State.Owner, "Unauthorized")
+          State.Value = msg.Data
+        end)
+
+  - id: RESPONSE_WRONG_TARGET
+    description: "ao.send response not targeting msg.From — reply goes to wrong process"
+    severity: medium
+    detection:
+      type: regex
+      pattern: "ao\\.send\\s*\\(\\s*\\{[^}]*Target\\s*=\\s*(?!msg\\.From)"
+    bad_code: |
+      -- Oops, responding to a hardcoded process instead of the caller
+      ao.send({ Target = State.Registry, Action = "Result", Data = result })
+    good_code: |
+      ao.send({ Target = msg.From, Action = "Result", Data = result })
+
+  - id: SEND_TARGET_NIL
+    description: "ao.send without verifying Target is not nil"
+    severity: high
+    detection:
+      type: regex
+      pattern: "ao\\.send\\s*\\(\\s*\\{\\s*Target\\s*=\\s*State\\."
+    bad_code: |
+      -- If State.Registry is nil, message goes nowhere silently
+      ao.send({ Target = State.Registry, Action = "Register" })
+    good_code: |
+      assert(State.Registry ~= nil, "Registry not configured")
+      ao.send({ Target = State.Registry, Action = "Register" })

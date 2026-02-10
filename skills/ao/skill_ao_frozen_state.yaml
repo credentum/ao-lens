@@ -1,0 +1,50 @@
+skill_id: skill_ao_frozen_state
+title: "AO Frozen State (Emergency Stop)"
+domain: lua/ao
+priority: high
+tech_stack: [lua, ao]
+
+# Every AO process should have an emergency stop mechanism.
+# State.Frozen = true should block all mutating handlers.
+# Without this, a compromised process has no kill switch.
+
+anti_patterns:
+  - id: MUTATING_NO_FROZEN_CHECK
+    description: "Handler mutates state without checking State.Frozen"
+    severity: high
+    detection:
+      type: handler_analysis
+      body_matches: "State\\.[A-Z]\\w*\\s*="
+      handler_name_not_contains: ["Get", "Query", "Info", "Freeze", "Unfreeze"]
+    bad_code: |
+      Handlers.add("Update",
+        Handlers.utils.hasMatchingTag("Action", "Update"),
+        function(msg)
+          assert(msg.From == State.Owner, "Unauthorized")
+          State.Value = msg.Data  -- No frozen check!
+        end)
+    good_code: |
+      Handlers.add("Update", function(msg)
+        return msg.Tags.Action == "Update"
+           and not State.Frozen   -- Emergency stop check
+           and msg.From == State.Owner
+      end, function(msg)
+        State.Value = msg.Data
+      end)
+
+  - id: FROZEN_NOT_INITIALIZED
+    description: "State.Frozen never initialized — defaults to nil (falsy), but explicit is safer"
+    severity: medium
+    detection:
+      type: regex
+      pattern: "State\\.Frozen"
+      requires_context: "State\\.Frozen\\s*=\\s*false|Frozen\\s*=\\s*false"
+      lines_to_check: 50
+    bad_code: |
+      -- State.Frozen is never set, relies on nil being falsy
+      if State.Frozen then return end
+    good_code: |
+      State = State or {
+        Frozen = false,  -- Explicit initialization
+        Owner = ao.env.Process.Owner
+      }

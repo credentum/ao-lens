@@ -1,0 +1,50 @@
+skill_id: skill_lua_nil_safety
+title: "Lua Nil Safety for AO"
+domain: lua/ao
+priority: critical
+tech_stack: [lua, ao]
+
+# Lua has several traps that catch developers from other languages.
+# These are the most common causes of bugs in AO processes.
+
+anti_patterns:
+  - id: NIL_CONCAT_CRASH
+    description: "String concatenation with potentially nil value crashes the process"
+    severity: medium
+    detection:
+      type: regex
+      pattern: "\\.\\.\\s*(?:msg\\.Tags\\.|State\\.)"
+    bad_code: |
+      -- Crashes if msg.Tags.Name is nil!
+      local greeting = "Hello " .. msg.Tags.Name
+    good_code: |
+      local greeting = "Hello " .. (msg.Tags.Name or "unknown")
+
+  - id: ZERO_TRUTHY_TRAP
+    description: "Using number in boolean context — 0 is truthy in Lua (unlike JS/Python)"
+    severity: low
+    detection:
+      type: regex
+      pattern: "if\\s+(?:count|balance|amount|total|len|size|num)\\s+then"
+    bad_code: |
+      -- In Lua, 0 is truthy! This block ALWAYS executes if count exists
+      if count then
+        -- runs even when count is 0
+      end
+    good_code: |
+      if count and count > 0 then
+        -- only runs when count is positive
+      end
+
+  - id: TABLE_ACCESS_NO_NIL_CHECK
+    description: "Accessing nested table field without checking parent exists"
+    severity: medium
+    detection:
+      type: regex
+      pattern: "msg\\.Tags\\.[A-Z]\\w+\\.[A-Z]"
+    bad_code: |
+      -- Crashes if msg.Tags.Config is nil
+      local value = msg.Tags.Config.Threshold
+    good_code: |
+      local config = msg.Tags.Config
+      local value = config and config.Threshold
