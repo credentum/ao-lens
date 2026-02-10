@@ -1,0 +1,8 @@
+src/
+tests/
+scripts/
+IMPLEMENTATION_PLAN.md
+tsconfig.json
+.github/
+*.ts
+!dist/**/*.d.ts

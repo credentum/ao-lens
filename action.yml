@@ -1,0 +1,82 @@
+name: 'ao-lens Security Audit'
+description: 'Run ao-lens security audit on AO/Lua code'
+author: 'Credentum'
+
+branding:
+  icon: 'shield'
+  color: 'blue'
+
+inputs:
+  path:
+    description: 'Path to Lua files or directory to audit'
+    required: false
+    default: 'ao/'
+  fail-on-high:
+    description: 'Fail if high severity issues are found'
+    required: false
+    default: 'true'
+  output-format:
+    description: 'Output format (json or pretty)'
+    required: false
+    default: 'pretty'
+
+outputs:
+  pass:
+    description: 'Whether the audit passed (true/false)'
+    value: ${{ steps.audit.outputs.pass }}
+  critical-count:
+    description: 'Number of critical severity issues'
+    value: ${{ steps.audit.outputs.critical }}
+  high-count:
+    description: 'Number of high severity issues'
+    value: ${{ steps.audit.outputs.high }}
+  total-count:
+    description: 'Total number of issues'
+    value: ${{ steps.audit.outputs.total }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install ao-lens
+      shell: bash
+      run: |
+        cd ${{ github.action_path }}
+        npm ci
+        npm run build
+
+    - name: Run Security Audit
+      id: audit
+      shell: bash
+      run: |
+        set +e
+        cd ${{ github.action_path }}
+
+        if [ "${{ inputs.output-format }}" = "pretty" ]; then
+          node dist/cli.js audit "${{ github.workspace }}/${{ inputs.path }}" --pretty
+        else
+          node dist/cli.js audit "${{ github.workspace }}/${{ inputs.path }}" --json > audit-results.json
+          cat audit-results.json
+        fi
+
+        # Run again for JSON output to parse results
+        RESULT=$(node dist/cli.js audit "${{ github.workspace }}/${{ inputs.path }}" --json 2>/dev/null)
+
+        PASS=$(echo "$RESULT" | jq -r '.pass')
+        CRITICAL=$(echo "$RESULT" | jq -r '.summary.critical')
+        HIGH=$(echo "$RESULT" | jq -r '.summary.high')
+        TOTAL=$(echo "$RESULT" | jq -r '.summary.total')
+
+        echo "pass=$PASS" >> $GITHUB_OUTPUT
+        echo "critical=$CRITICAL" >> $GITHUB_OUTPUT
+        echo "high=$HIGH" >> $GITHUB_OUTPUT
+        echo "total=$TOTAL" >> $GITHUB_OUTPUT
+
+        if [ "${{ inputs.fail-on-high }}" = "true" ] && [ "$PASS" = "false" ]; then
+          echo "::error::Security audit failed with $CRITICAL critical and $HIGH high severity issues"
+          exit 1
+        fi

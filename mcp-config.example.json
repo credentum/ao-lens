@@ -1,0 +1,23 @@
+{
+  "mcpServers": {
+    "ao-lens": {
+      "command": "node",
+      "args": ["/path/to/ao-lens/dist/mcp-server.js"],
+      "env": {},
+      "_comment": "ao-lens MCP server for Lua/AO semantic analysis",
+      "_tools": [
+        "analyze_file - Parse Lua file and extract handlers, functions, state access",
+        "analyze_handler - Get detailed handler analysis by name",
+        "map_architecture - Generate IPC topology graph from Lua files",
+        "find_state_mutations - Find all State.* mutations in files",
+        "check_determinism - Check for replay-safety violations",
+        "list_handlers - List handlers with action tags and strictness",
+        "security_audit - Run security audit with severity-ranked findings",
+        "get_function_details - Get function details by name with body analysis",
+        "get_handler_body - Get handler source and body analysis",
+        "find_state_usage - Find reads/writes to state field across files",
+        "query_handlers - Query handlers with semantic filters"
+      ]
+    }
+  }
+}
