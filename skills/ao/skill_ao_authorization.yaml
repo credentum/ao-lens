@@ -1,0 +1,56 @@
+skill_id: skill_ao_authorization
+title: "AO Handler Authorization"
+domain: lua/ao
+priority: critical
+tech_stack: [lua, ao]
+
+# Handlers that mutate state must verify the caller's identity.
+# Common pitfalls: missing auth, nil == nil bypass, first-caller-wins.
+
+anti_patterns:
+  - id: FIRST_CALLER_WINS_OWNER
+    description: "State.Owner = State.Owner or msg.From lets the first caller claim ownership"
+    severity: critical
+    detection:
+      type: regex
+      pattern: "State\\.Owner\\s*=\\s*State\\.Owner\\s*or"
+    bad_code: |
+      -- Anyone who sends the first message becomes owner!
+      State.Owner = State.Owner or msg.From
+    good_code: |
+      -- Set owner from spawn environment (immutable, set at process creation)
+      State.Owner = ao.env.Process.Owner
+
+  - id: NIL_EQUALS_NIL_BYPASS
+    description: "msg.From == State.Owner passes when both are nil (nil == nil is true in Lua)"
+    severity: critical
+    detection:
+      type: regex
+      pattern: "msg\\.From\\s*==\\s*State\\.Owner"
+      requires_context: "assert.*State\\.Owner|if.*State\\.Owner\\s*~=\\s*nil|State\\.Owner\\s*and"
+      lines_to_check: 3
+    bad_code: |
+      -- If State.Owner is nil, ANY caller passes this check!
+      assert(msg.From == State.Owner, "Unauthorized")
+    good_code: |
+      assert(State.Owner ~= nil, "Owner not initialized")
+      assert(msg.From == State.Owner, "Unauthorized")
+
+  - id: MISSING_AUTH_ON_MUTATOR
+    description: "Handler mutates state without checking msg.From"
+    severity: high
+    detection:
+      type: handler_analysis
+      body_matches: "State\\.[A-Z]\\w*\\s*="
+      handler_name_not_contains: ["Get", "Query", "Info", "List"]
+    bad_code: |
+      Handlers.add("Update", Handlers.utils.hasMatchingTag("Action", "Update"),
+        function(msg)
+          State.Value = msg.Data  -- No auth check!
+        end)
+    good_code: |
+      Handlers.add("Update", Handlers.utils.hasMatchingTag("Action", "Update"),
+        function(msg)
+          assert(msg.From == State.Owner, "Unauthorized")
+          State.Value = msg.Data
+        end)

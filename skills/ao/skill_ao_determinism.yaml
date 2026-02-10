@@ -1,0 +1,49 @@
+skill_id: skill_ao_determinism
+title: "AO Deterministic State"
+domain: lua/ao
+priority: high
+tech_stack: [lua, ao]
+
+# AO processes reconstruct state by replaying the message log.
+# Any non-deterministic call (os.time, math.random, io, http)
+# will produce different state on replay → state divergence.
+
+anti_patterns:
+  - id: OS_TIME_USAGE
+    description: "os.time() returns different values on replay — use msg.Timestamp"
+    severity: critical
+    detection:
+      type: regex
+      pattern: "os\\.time\\s*\\("
+    bad_code: "State.LastUpdate = os.time()"
+    good_code: "State.LastUpdate = msg.Timestamp"
+
+  - id: MATH_RANDOM_UNSEEDED
+    description: "math.random() without deterministic seed breaks replay"
+    severity: critical
+    detection:
+      type: regex
+      pattern: "math\\.random\\s*\\("
+    bad_code: "local r = math.random()"
+    good_code: |
+      -- Seed with message ID hash for deterministic randomness
+      math.randomseed(tonumber(msg.Id:sub(1, 8), 16))
+      local r = math.random()
+
+  - id: OS_DATE_USAGE
+    description: "os.date() breaks determinism — store msg.Timestamp and format on read"
+    severity: high
+    detection:
+      type: regex
+      pattern: "os\\.date\\s*\\("
+    bad_code: "State.FormattedDate = os.date('%Y-%m-%d')"
+    good_code: "State.LastTimestamp = msg.Timestamp"
+
+  - id: IO_OPERATION
+    description: "File I/O is non-deterministic and unavailable in AO"
+    severity: critical
+    detection:
+      type: regex
+      pattern: "io\\.(open|read|write|lines)"
+    bad_code: "local f = io.open('data.txt', 'r')"
+    good_code: "-- Store data in State or receive via messages"

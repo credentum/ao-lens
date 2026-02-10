@@ -1,0 +1,42 @@
+skill_id: skill_ao_json_safety
+title: "AO JSON Safety"
+domain: lua/ao
+priority: high
+tech_stack: [lua, ao]
+
+# json.decode() and json.encode() can throw errors on malformed input.
+# Always wrap in pcall to prevent process crashes from bad data.
+
+anti_patterns:
+  - id: JSON_DECODE_NO_PCALL
+    description: "json.decode() without pcall — malformed input crashes the handler"
+    severity: high
+    detection:
+      type: regex
+      pattern: "json\\.decode\\s*\\("
+      requires_context: "pcall"
+      lines_to_check: 2
+    bad_code: |
+      local data = json.decode(msg.Data)  -- Crashes on invalid JSON!
+    good_code: |
+      local ok, data = pcall(json.decode, msg.Data)
+      if not ok then
+        ao.send({ Target = msg.From, Action = "Error", Data = "Invalid JSON" })
+        return
+      end
+
+  - id: JSON_ENCODE_NO_PCALL
+    description: "json.encode() without pcall — circular references or invalid types crash the handler"
+    severity: high
+    detection:
+      type: regex
+      pattern: "json\\.encode\\s*\\("
+      requires_context: "pcall"
+      lines_to_check: 2
+    bad_code: |
+      ao.send({ Target = msg.From, Data = json.encode(response) })
+    good_code: |
+      local ok, encoded = pcall(json.encode, response)
+      if ok then
+        ao.send({ Target = msg.From, Data = encoded })
+      end
