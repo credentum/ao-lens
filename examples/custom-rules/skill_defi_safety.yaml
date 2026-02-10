@@ -1,0 +1,59 @@
+skill_id: skill_defi_safety
+title: "DeFi Safety Rules for AO"
+domain: lua/ao
+priority: critical
+tech_stack: [lua, ao]
+
+# Custom rules for DeFi protocols on AO.
+# Catches common AMM/pool vulnerabilities.
+
+anti_patterns:
+  - id: DIVISION_WITHOUT_ZERO_CHECK
+    description: "Division by pool reserve without checking for zero — causes crash or infinite result"
+    severity: critical
+    detection:
+      type: regex
+      pattern: "Reserve[AB]\\s*[/]"
+      requires_context: "Reserve[AB]\\s*[>~]"
+      lines_to_check: 3
+    bad_code: |
+      -- Crashes if ReserveB is 0 (empty pool)
+      local price = State.ReserveA / State.ReserveB
+    good_code: |
+      assert(State.ReserveB > 0, "Pool has no liquidity")
+      local price = State.ReserveA / State.ReserveB
+
+  - id: NO_SLIPPAGE_PROTECTION
+    description: "Swap handler without minimum output check — users lose funds to sandwich attacks"
+    severity: high
+    detection:
+      type: handler_analysis
+      handler_name_contains: ["Swap"]
+      body_matches: "Reserve[AB]"
+      body_not_matches: "[Mm]in[Oo]ut|slippage|minimum"
+    bad_code: |
+      -- No minimum output — MEV bots can sandwich this trade
+      Handlers.add("Swap", { Action = "Swap" }, function(msg)
+        local amountOut = calculateSwap(msg.Data)
+        sendTokens(msg.From, amountOut)
+      end)
+    good_code: |
+      Handlers.add("Swap", { Action = "Swap" }, function(msg)
+        local amountOut = calculateSwap(msg.Data)
+        assert(amountOut >= data.MinOut, "Slippage exceeded")
+        sendTokens(msg.From, amountOut)
+      end)
+
+  - id: UNBOUNDED_FEE_RATE
+    description: "Fee rate can be set to any value — owner could set 100% fee and drain the pool"
+    severity: high
+    detection:
+      type: regex
+      pattern: "FeeRate\\s*=\\s*(?:data|msg|tonumber)"
+    bad_code: |
+      -- Owner can set fee to 10000 (100%) and steal all swaps
+      State.FeeRate = tonumber(msg.Tags.FeeRate)
+    good_code: |
+      local newRate = tonumber(msg.Tags.FeeRate)
+      assert(newRate >= 1 and newRate <= 100, "Fee must be 0.01%-1%")
+      State.FeeRate = newRate
