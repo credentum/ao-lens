@@ -3,27 +3,7 @@
  * Verifies proper JSON parsing with error handling
  */
 
-import { SecurityCheck, ProcessContext, Finding } from "../types";
-
-/**
- * Helper to strip comments from a Lua line
- */
-function stripLuaComments(line: string): string {
-  const commentIndex = line.indexOf("--");
-  if (commentIndex === -1) return line;
-
-  // Check if -- is inside a string (simplified check)
-  const beforeComment = line.substring(0, commentIndex);
-  const singleQuotes = (beforeComment.match(/'/g) || []).length;
-  const doubleQuotes = (beforeComment.match(/"/g) || []).length;
-
-  // If odd number of quotes, we're inside a string
-  if (singleQuotes % 2 === 1 || doubleQuotes % 2 === 1) {
-    return line;
-  }
-
-  return beforeComment;
-}
+import { SecurityCheck, ProcessContext, Finding, stripLuaComments } from "../types";
 
 export const jsonChecks: SecurityCheck[] = [
   {

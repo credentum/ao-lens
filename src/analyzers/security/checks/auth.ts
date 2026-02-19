@@ -3,7 +3,7 @@
  * Verifies proper authorization patterns in handlers
  */
 
-import { SecurityCheck, ProcessContext, Finding } from "../types";
+import { SecurityCheck, ProcessContext, Finding, findHandlerAtLine } from "../types";
 
 export const authChecks: SecurityCheck[] = [
   {
@@ -335,6 +335,10 @@ export const authChecks: SecurityCheck[] = [
                                /assert\s*\(\s*msg\.From/.test(handlerContext);
 
             if (!hasNilGuard && /Target\s*=\s*msg\.From/.test(line)) {
+              // Skip if inside a hasMatchingTag handler — msg.From is guaranteed for external messages
+              const handler = findHandlerAtLine(ctx, i + 1);
+              if (handler?.handlerInfo.signature_type === "hasMatchingTag") continue;
+
               findings.push({
                 code: "AO_SEND_TARGET_NO_NIL_GUARD",
                 message: "Target = msg.From without nil guard - may fail if msg.From is nil",

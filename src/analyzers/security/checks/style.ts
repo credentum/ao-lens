@@ -3,7 +3,7 @@
  * Lower severity checks for code quality and AO patterns
  */
 
-import { SecurityCheck, ProcessContext, Finding } from "../types";
+import { SecurityCheck, ProcessContext, Finding, findHandlerAtLine, stripLuaComments } from "../types";
 
 export const styleChecks: SecurityCheck[] = [
   {
@@ -143,6 +143,10 @@ export const styleChecks: SecurityCheck[] = [
             /msg\.Tags\s*~=\s*nil/.test(context);
 
           if (!hasGuard) {
+            // Skip if inside a hasMatchingTag handler — matcher validates msg.Tags
+            const handler = findHandlerAtLine(ctx, i + 1);
+            if (handler?.handlerInfo.signature_type === "hasMatchingTag") continue;
+
             findings.push({
               code: "MSG_TAGS_NO_NIL_GUARD",
               message: "msg.Tags accessed without nil guard",
@@ -279,14 +283,12 @@ export const styleChecks: SecurityCheck[] = [
         let line = lines[i];
 
         // Strip Lua comments before checking (avoid false positives on file paths in comments)
-        const commentIndex = line.indexOf("--");
-        if (commentIndex !== -1) {
-          line = line.substring(0, commentIndex);
-        }
+        line = stripLuaComments(line);
 
         // Check for division that could produce NaN/Inf
-        // More specific regex: requires expression context (word/number before and after /)
-        // This avoids matching / in strings or other non-division contexts
+        // Skip constant divisions (both operands are numbers)
+        if (/\d+\s*\/\s*\d+/.test(line)) continue;
+        // Requires variable / variable pattern (not dividing by a literal number)
         if (/\w+\s*\/\s*\w+/.test(line) && !/\w+\s*\/\s*\d+/.test(line)) {
           const context = lines.slice(i, i + 5).join("\n");
           const hasCheck =
@@ -322,11 +324,19 @@ export const styleChecks: SecurityCheck[] = [
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
 
-        // Check for msg.From in string concatenation or format
+        // Check for msg.From in output contexts (print, ao.send Data, error)
+        // Skip non-output contexts like hash computation: crypto.utils.sha256(x .. msg.From)
+        const isOutputContext =
+          /print\s*\(/.test(line) ||
+          /error\s*\(/.test(line) ||
+          /Data\s*=.*msg\.From/.test(line) ||
+          /tostring\s*\(\s*msg\.From/.test(line);
+
         if (
-          /["'].*msg\.From/.test(line) ||
-          /tostring\s*\(\s*msg\.From/.test(line) ||
-          /\.\..*msg\.From/.test(line)
+          isOutputContext &&
+          (/["'].*msg\.From/.test(line) ||
+           /tostring\s*\(\s*msg\.From/.test(line) ||
+           /\.\..*msg\.From/.test(line))
         ) {
           findings.push({
             code: "INFO_LEAK_SENDER_ADDRESS",
@@ -407,7 +417,13 @@ export const styleChecks: SecurityCheck[] = [
         const hasStateWrite = /State\s*\.\s*\w+\s*=/.test(handlerSource) ||
                               /State\s*\[\s*["']?\w+/.test(handlerSource);
 
-        if (!hasStateWrite) {
+        // Check for non-State global table mutations (e.g., AgentMemory[x] = ..., Skills[id] = ...)
+        // Matches PascalCase/UPPER globals with bracket or dot assignment, excluding comparisons (==)
+        // Also handles nested bracket access like AgentMemory[x][y] = nil
+        const hasGlobalWrite = /\b[A-Z]\w*\s*\[/.test(handlerSource) &&
+                               /\b[A-Z]\w*(?:\s*\[[^\]]*\])+\s*=[^=]/.test(handlerSource);
+
+        if (!hasStateWrite && !hasGlobalWrite) {
           findings.push({
             code: "HANDLER_NO_STATE_MUTATION",
             message: `Handler "${name}" suggests mutation but doesn't modify State`,

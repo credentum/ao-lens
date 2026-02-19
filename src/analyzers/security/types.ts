@@ -143,3 +143,36 @@ export interface CheckCategory {
   description: string;
   checks: SecurityCheck[];
 }
+
+/**
+ * Find which handler a source line belongs to.
+ * Returns the HandlerContext if the line is inside a handler, null otherwise.
+ */
+export function findHandlerAtLine(ctx: ProcessContext, line: number): HandlerContext | null {
+  for (const [, handler] of ctx.handlers) {
+    if (line >= handler.startLine && line <= handler.endLine) {
+      return handler;
+    }
+  }
+  return null;
+}
+
+/**
+ * Strip Lua line comments (--) while respecting string literals.
+ * Shared utility for checks that need to avoid false positives from comments.
+ */
+export function stripLuaComments(line: string): string {
+  const commentIndex = line.indexOf("--");
+  if (commentIndex === -1) return line;
+
+  const beforeComment = line.substring(0, commentIndex);
+  const singleQuotes = (beforeComment.match(/'/g) || []).length;
+  const doubleQuotes = (beforeComment.match(/"/g) || []).length;
+
+  // If odd number of quotes, we're inside a string
+  if (singleQuotes % 2 === 1 || doubleQuotes % 2 === 1) {
+    return line;
+  }
+
+  return beforeComment;
+}
