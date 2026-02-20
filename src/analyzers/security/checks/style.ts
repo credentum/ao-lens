@@ -167,6 +167,9 @@ export const styleChecks: SecurityCheck[] = [
     category: "style",
     description: "Use msg.Tags.Action instead of msg.Action",
     run(ctx: ProcessContext): Finding[] {
+      // AOS normalizes tags to root-level msg properties — msg.Action is valid
+      if (ctx.isAosStyle) return [];
+
       const findings: Finding[] = [];
 
       const lines = ctx.sourceCode.split("\n");
@@ -192,6 +195,9 @@ export const styleChecks: SecurityCheck[] = [
     category: "style",
     description: "Accessing non-standard msg property",
     run(ctx: ProcessContext): Finding[] {
+      // AOS normalizes tags to root-level msg properties — msg.Action, msg.Quantity etc. are valid
+      if (ctx.isAosStyle) return [];
+
       const findings: Finding[] = [];
 
       const knownProps = [

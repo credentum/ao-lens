@@ -265,8 +265,8 @@ export const authChecks: SecurityCheck[] = [
         const line = lines[i];
 
         // Check for Owner = nil patterns
-        // Pattern: Owner = nil (in table or assignment)
-        if (/Owner\s*=\s*nil/.test(line)) {
+        // Only match standalone Owner or State.Owner, not fields like contractOwner/processOwner
+        if (/(?<![A-Za-z_])Owner\s*=\s*nil/.test(line)) {
           findings.push({
             code: "OWNER_EXPLICIT_NIL",
             message: "Owner = nil creates nil==nil bypass vulnerability for all auth checks",

@@ -40,6 +40,9 @@ export class ProcessContextBuilder {
     // 0b. Detect if this is a test file (skip production rules)
     const isTestFile = this.detectTestFile(filePath);
 
+    // 0c. Detect if this file uses AOS-style msg properties (msg.Action etc.)
+    const isAosStyle = this.detectAosStyle(sourceCode);
+
     // 1. Analyze state initialization
     const state = this.analyzeStateInit(sourceCode, rootNode);
 
@@ -65,6 +68,7 @@ export class ProcessContextBuilder {
       filePath,
       isLibrary,
       isTestFile,
+      isAosStyle,
       state,
       handlers,
       project,
@@ -121,6 +125,41 @@ export class ProcessContextBuilder {
 
     // Pattern 3: File name is test.lua
     if (fileName === "test.lua") {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Detect if a file runs under AOS (ao Standard).
+   * AOS normalizes tags to root-level msg properties, making msg.Action valid.
+   * Detection is based on AOS runtime indicators, NOT on msg.Action itself
+   * (to avoid circular suppression of MSG_ACTION_DIRECT_ACCESS).
+   */
+  private detectAosStyle(sourceCode: string): boolean {
+    // Pattern 1: Uses ao.send() — AOS runtime function
+    if (/\bao\.send\s*\(/.test(sourceCode)) {
+      return true;
+    }
+
+    // Pattern 2: Uses msg.reply() — AOS convenience method
+    if (/\bmsg\.reply\s*\(/.test(sourceCode)) {
+      return true;
+    }
+
+    // Pattern 3: Uses Handlers.add() — AOS handler registration
+    if (/\bHandlers\.add\s*\(/.test(sourceCode)) {
+      return true;
+    }
+
+    // Pattern 4: Uses ao.id — AOS process identity
+    if (/\bao\.id\b/.test(sourceCode)) {
+      return true;
+    }
+
+    // Pattern 5: Annotation -- @ao-lens: aos-style
+    if (/--\s*@ao-lens[:\s-]aos[-\s]?style/.test(sourceCode)) {
       return true;
     }
 

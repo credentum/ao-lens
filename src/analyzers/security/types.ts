@@ -102,6 +102,9 @@ export interface ProcessContext {
   /** Whether this is a test file (skip production rules) */
   isTestFile: boolean;
 
+  /** Whether this file uses AOS-style msg properties (msg.Action, msg.Quantity, etc.) */
+  isAosStyle: boolean;
+
   /** State initialization analysis */
   state: StateAnalysis;
 
