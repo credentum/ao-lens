@@ -43,6 +43,24 @@ export const jsonChecks: SecurityCheck[] = [
           if (/pcall\s*\(\s*function/.test(context) && /\.decode/.test(context)) continue;
         }
 
+        // Check for named-function pcall wrapper pattern:
+        //   local function parseData() ... json.decode ... end
+        //   local status, err = pcall(parseData)
+        // Look for enclosing local function and pcall of that function name nearby
+        if (i > 0) {
+          // Find if we're inside a local function
+          let enclosingFnName: string | null = null;
+          for (let j = i - 1; j >= Math.max(0, i - 5); j--) {
+            const fnMatch = lines[j].match(/local\s+function\s+(\w+)\s*\(/);
+            if (fnMatch) { enclosingFnName = fnMatch[1]; break; }
+          }
+          if (enclosingFnName) {
+            // Look ahead for pcall(fnName) after the function end
+            const ahead = lines.slice(i, Math.min(lines.length, i + 5)).join("\n");
+            if (new RegExp(`pcall\\s*\\(\\s*${enclosingFnName}\\s*\\)`).test(ahead)) continue;
+          }
+        }
+
         findings.push({
           code: "JSON_DECODE_NO_PCALL",
           message: "json.decode() without pcall crashes on malformed JSON",
@@ -88,6 +106,19 @@ export const jsonChecks: SecurityCheck[] = [
         if (i > 0) {
           const context = lines.slice(Math.max(0, i - 3), i + 1).join("\n");
           if (/pcall\s*\(\s*function/.test(context) && /\.encode/.test(context)) continue;
+        }
+
+        // Check for named-function pcall wrapper pattern
+        if (i > 0) {
+          let enclosingFnName: string | null = null;
+          for (let j = i - 1; j >= Math.max(0, i - 5); j--) {
+            const fnMatch = lines[j].match(/local\s+function\s+(\w+)\s*\(/);
+            if (fnMatch) { enclosingFnName = fnMatch[1]; break; }
+          }
+          if (enclosingFnName) {
+            const ahead = lines.slice(i, Math.min(lines.length, i + 5)).join("\n");
+            if (new RegExp(`pcall\\s*\\(\\s*${enclosingFnName}\\s*\\)`).test(ahead)) continue;
+          }
         }
 
         findings.push({

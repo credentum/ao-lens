@@ -254,10 +254,17 @@ export const styleChecks: SecurityCheck[] = [
 
         if (/tonumber\s*\(/.test(line)) {
           const context = lines.slice(i, i + 3).join("\n");
+
+          // Extract variable name if assigned: local x = tonumber(...)
+          const varMatch = line.match(/local\s+(\w+)\s*=\s*tonumber/);
+          const varName = varMatch ? varMatch[1] : null;
+
           const hasNilCheck =
             /if\s+not\s+\w+\s+then/.test(context) ||
             /~=\s*nil/.test(context) ||
-            /or\s+\d+/.test(line); // Default value pattern
+            /or\s+\d+/.test(line) || // Default value pattern
+            /assert\s*\(\s*\w+/.test(context) || // assert(result, msg)
+            (varName && new RegExp(`assert\\s*\\(\\s*${varName}\\b`).test(context));
 
           if (!hasNilCheck) {
             findings.push({

@@ -130,6 +130,11 @@ export const authChecks: SecurityCheck[] = [
 
       // Check if any handler uses auth but Owner isn't initialized
       if (ctx.project.usesAuth && !ctx.state.ownerInitialized) {
+        // Skip if project uses alternative auth patterns (not State.Owner based)
+        const hasAclModule = /require\s*\(\s*['"][^'"]*acl[^'"]*['"]\s*\)/.test(ctx.sourceCode);
+        const hasDirectOwnerAuth = /ao\.env\.Process\.Owner/.test(ctx.sourceCode);
+        if (hasAclModule || hasDirectOwnerAuth) return findings;
+
         // Find the first handler that uses auth to report the error
         for (const [_name, handler] of ctx.handlers) {
           if (handler.auth.location !== "none") {

@@ -227,6 +227,22 @@ export class HandlerAnalyzer {
       const { analysis, trig } = this.analyzeInlineMatcher(matcherArg);
       matcherAnalysis = analysis;
       trigger = trig;
+    } else if (matcherArg.type === "string") {
+      // Pattern: Handlers.add("Name", "Action", fn)
+      // String matcher is shorthand for hasMatchingTag("Action", value)
+      signatureType = "hasMatchingTag";
+      const actionValue = this.extractStringContent(matcherArg);
+      trigger = this.emptyTrigger();
+      if (actionValue) {
+        trigger.action_tag = actionValue;
+        trigger.required_tags["Action"] = actionValue;
+      }
+      matcherAnalysis = {
+        type: "hasMatchingTag",
+        strictness: "loose",
+        validates_schema: false,
+        checks_authorization: false,
+      };
     } else if (matcherArg.type === "table_constructor") {
       // Pattern 3: table syntax (rare)
       signatureType = "table";
