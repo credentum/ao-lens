@@ -135,6 +135,10 @@ export const authChecks: SecurityCheck[] = [
         const hasDirectOwnerAuth = /ao\.env\.Process\.Owner/.test(ctx.sourceCode);
         if (hasAclModule || hasDirectOwnerAuth) return findings;
 
+        // Skip if AOS-style code uses bare Owner global (not State.Owner)
+        // AOS provides Owner automatically from ao.env.Process.Owner
+        if (ctx.isAosStyle && !/State\.Owner/.test(ctx.sourceCode)) return findings;
+
         // Find the first handler that uses auth to report the error
         for (const [_name, handler] of ctx.handlers) {
           if (handler.auth.location !== "none") {

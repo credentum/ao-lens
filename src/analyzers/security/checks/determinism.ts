@@ -33,6 +33,9 @@ export const determinismChecks: SecurityCheck[] = [
     category: "determinism",
     description: "os.time() breaks determinism - use msg.Timestamp instead",
     run(ctx: ProcessContext): Finding[] {
+      // AOS patches os.time() to return msg.Timestamp, making it deterministic
+      if (ctx.isAosStyle) return [];
+
       const findings: Finding[] = [];
 
       const lines = ctx.sourceCode.split("\n");

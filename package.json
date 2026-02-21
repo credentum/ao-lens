@@ -1,6 +1,6 @@
 {
   "name": "ao-lens",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Agent-native semantic analysis engine for AO/Lua development",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
